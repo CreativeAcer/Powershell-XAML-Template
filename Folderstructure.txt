@@ -1,0 +1,14 @@
+MyPowerShellApp/
+├── src/
+│   ├── GUI/
+│   │   ├── MainWindow.xaml
+│   │   └── LoginWindow.xaml
+│   ├── Modules/
+│   │   ├── Authentication.psm1
+│   │   ├── GuiManager.psm1
+│   │   ├── BackgroundJobs.psm1
+│   │   └── XamlLoader.psm1
+│   ├── Themes/
+│   │   └── Theme.ps1
+│   └── Main.ps1
+└── README.md
