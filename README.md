@@ -2,6 +2,10 @@
 
 A modern PowerShell GUI application template demonstrating non-blocking background task execution with real-time progress updates. This template showcases how to build responsive Windows desktop applications using PowerShell and XAML, with a focus on proper thread management and UI responsiveness.
 
+<div align="center">
+    <img src="./Docs/Preview.png" alt="Simple preview" width="800"/>
+</div>
+
 ## Key Features
 
 - 🔄 Non-blocking background task execution
