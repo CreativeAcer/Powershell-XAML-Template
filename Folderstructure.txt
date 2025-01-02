@@ -10,5 +10,7 @@ MyPowerShellApp/
 │   │   └── XamlLoader.psm1
 │   ├── Themes/
 │   │   └── Theme.ps1
+│   ├── Create-AppShortcut.ps1
+│   ├── Create-Shortcut.bat
 │   └── Main.ps1
 └── README.md

@@ -15,13 +15,52 @@
         <StackPanel Grid.Row="0" Background="{Binding Source=$AppTheme.PrimaryColor}">
             <TextBlock Text="Welcome" Foreground="{Binding Source=$AppTheme.TextColor}" 
                      FontSize="24" Margin="10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
+                <Canvas x:Name="SpinnerCanvas" Width="20" Height="20" Margin="0,0,10,0">
+                    <Path x:Name="SpinnerPath" 
+                        Stroke="{Binding Source=$AppTheme.TextColor}" 
+                        StrokeThickness="2"
+                        Data="M 10,2 A 8,8 0 1 1 9.9,2">
+                        <Path.RenderTransform>
+                            <RotateTransform x:Name="SpinTransform" CenterX="10" CenterY="10"/>
+                        </Path.RenderTransform>
+                    </Path>
+                </Canvas>
+                <TextBlock x:Name="TimeDisplay" 
+                        Foreground="{Binding Source=$AppTheme.TextColor}"
+                        FontSize="14" 
+                        VerticalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
         
         <Grid Grid.Row="1" Margin="10">
-            <ProgressBar x:Name="MainProgressBar" Height="20" Width="200"
-                       Visibility="Collapsed"/>
-            <TextBlock x:Name="StatusText" Text="" HorizontalAlignment="Center"
-                     VerticalAlignment="Center"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Output TextBox -->
+            <TextBox x:Name="OutputTextBox" 
+                     Grid.Row="0"
+                     Margin="0,0,0,10"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     Background="#f5f5f5"
+                     FontFamily="Consolas"/>
+            
+            <!-- Progress Section -->
+            <StackPanel Grid.Row="1">
+                <ProgressBar x:Name="MainProgressBar" 
+                            Height="20" 
+                            Width="200"
+                            Visibility="Collapsed"/>
+                <TextBlock x:Name="StatusText" 
+                          Text="" 
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Margin="0,5,0,0"/>
+            </StackPanel>
         </Grid>
         
         <Button Grid.Row="2" x:Name="StartButton" Content="Start Process" 

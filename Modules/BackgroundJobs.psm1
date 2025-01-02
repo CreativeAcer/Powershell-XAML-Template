@@ -73,9 +73,16 @@ function New-ProgressTimer {
                         $script:timerState.Timer.Stop()
                         $script:timerState.Timer = $null
                     }
-                    $script:timerState.UIElements["ProgressBar"].Value = 100
+                    $script:timerState.UIElements["MainProgressBar"].Value = 100
                     $script:timerState.UIElements["StatusText"].Text = "Process completed!"
                     $script:timerState.UIElements["StartButton"].IsEnabled = $true
+                    
+                    # Add completion message to output
+                    $script:timerState.UIElements["OutputTextBox"].Dispatcher.Invoke({
+                        $script:timerState.UIElements["OutputTextBox"].AppendText("Process completed successfully!`r`n")
+                        $script:timerState.UIElements["OutputTextBox"].ScrollToEnd()
+                    })
+                    
                     Remove-Job $currentJob -Force
                     $script:timerState.Job = $null
                 }
@@ -88,6 +95,13 @@ function New-ProgressTimer {
                     }
                     $script:timerState.UIElements["StatusText"].Text = "Process failed!"
                     $script:timerState.UIElements["StartButton"].IsEnabled = $true
+                    
+                    # Add failure message to output
+                    $script:timerState.UIElements["OutputTextBox"].Dispatcher.Invoke({
+                        $script:timerState.UIElements["OutputTextBox"].AppendText("Process failed!`r`n")
+                        $script:timerState.UIElements["OutputTextBox"].ScrollToEnd()
+                    })
+                    
                     Remove-Job $currentJob -Force
                     $script:timerState.Job = $null
                 }
@@ -97,11 +111,22 @@ function New-ProgressTimer {
                         $lastValue = $progress | Select-Object -Last 1
                         Write-Host "Progress update: $lastValue"
                         $script:timerState.LastProgressValue = $lastValue
-                        $script:timerState.UIElements["ProgressBar"].Value = $lastValue
+                        $script:timerState.UIElements["MainProgressBar"].Value = $lastValue
+                        
+                        # Add progress update to output
+                        $script:timerState.UIElements["OutputTextBox"].Dispatcher.Invoke({
+                            $script:timerState.UIElements["OutputTextBox"].AppendText("Progress: $lastValue`r`n")
+                            $script:timerState.UIElements["OutputTextBox"].ScrollToEnd()
+                        })
                     }
                 }
                 default {
                     Write-Host "Unexpected job state: $($currentJob.State)"
+                    # Add unexpected state message to output
+                    $script:timerState.UIElements["OutputTextBox"].Dispatcher.Invoke({
+                        $script:timerState.UIElements["OutputTextBox"].AppendText("Unexpected job state: $($currentJob.State)`r`n")
+                        $script:timerState.UIElements["OutputTextBox"].ScrollToEnd()
+                    })
                 }
             }
         }
@@ -115,6 +140,12 @@ function New-ProgressTimer {
             try {
                 $script:timerState.UIElements["StatusText"].Text = "Error occurred!"
                 $script:timerState.UIElements["StartButton"].IsEnabled = $true
+                
+                # Add error message to output
+                $script:timerState.UIElements["OutputTextBox"].Dispatcher.Invoke({
+                    $script:timerState.UIElements["OutputTextBox"].AppendText("Error occurred: $($_.Exception.Message)`r`n")
+                    $script:timerState.UIElements["OutputTextBox"].ScrollToEnd()
+                })
             }
             catch {
                 Write-Host "Failed to update UI elements: $($_.Exception.Message)"
@@ -129,4 +160,42 @@ function New-ProgressTimer {
     return $script:timerState.Timer
 }
 
-Export-ModuleMember -Function Start-LongRunningProcess, New-ProgressTimer
+function New-UIResponsivenessTimer {
+    param(
+        [Parameter(Mandatory=$true)]
+        [hashtable]$UIElements
+    )
+    
+    $timer = New-Object System.Windows.Threading.DispatcherTimer
+    $timer.Interval = [TimeSpan]::FromMilliseconds(50)  # Update every 50ms for smooth animation
+    
+    # Store state in script scope
+    $script:uiTimerState = @{
+        RotationAngle = 0
+        TimeFormat = "HH:mm:ss.fff"
+        Timer = $timer
+        UIElements = $UIElements
+    }
+    
+    $timer.Add_Tick({
+        try {
+            # Update spinner rotation
+            $script:uiTimerState.RotationAngle = ($script:uiTimerState.RotationAngle + 10) % 360
+            $script:uiTimerState.UIElements["SpinTransform"].Angle = $script:uiTimerState.RotationAngle
+            
+            # Update timestamp
+            $script:uiTimerState.UIElements["TimeDisplay"].Text = (Get-Date).ToString($script:uiTimerState.TimeFormat)
+        }
+        catch {
+            Write-Host "Error updating UI responsiveness indicators: $($_.Exception.Message)"
+            if ($script:uiTimerState.Timer) {
+                $script:uiTimerState.Timer.Stop()
+                $script:uiTimerState.Timer = $null
+            }
+        }
+    })
+    
+    return $timer
+}
+
+Export-ModuleMember -Function Start-LongRunningProcess, New-ProgressTimer, New-UIResponsivenessTimer
