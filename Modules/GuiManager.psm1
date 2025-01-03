@@ -1,4 +1,7 @@
 #Called from main.ps1
+# GuiManager.psm1
+
+# Function to initialize the MainWindow
 function Initialize-MainWindow {
     param(
         [string]$XamlPath
@@ -21,7 +24,7 @@ function Initialize-MainWindow {
     $script:namespaceManager.AddNamespace("x", "http://schemas.microsoft.com/winfx/2006/xaml")
     
     # Initialize the global elements hashtable
-    $global:MainWindowElements = @{}
+    $global:MainWindowElements = @{ }
     
     # Find all named controls
     $xamlMainWindow.SelectNodes("//*[@x:Name]", $script:namespaceManager) | ForEach-Object {
@@ -31,29 +34,18 @@ function Initialize-MainWindow {
     }
 
     # Verify all required elements were found
-    if (-not ($global:MainWindowElements["MainProgressBar"] -and 
-            $global:MainWindowElements["StatusText"] -and 
-            $global:MainWindowElements["StartButton"] -and
-            $global:MainWindowElements["OutputTextBox"])) {
+    $requiredElements = @("MainProgressBar", "StatusText", "StartButton", "SpinTransform", "OutputTextBox")
+    if (-not ($requiredElements | ForEach-Object { $global:MainWindowElements[$_] })) {
         Write-Error "Failed to find all required UI elements"
         return
     }
 
-    # Verify UI responsiveness elements
-    if (-not ($global:MainWindowElements["SpinTransform"] -and 
-              $global:MainWindowElements["TimeDisplay"])) {
-        Write-Host "Warning: UI responsiveness indicators not found"
-    }
-
-    # Initialize UI responsiveness timer
+    # Initialize UI responsiveness timer for the clock
     $script:uiResponsivenessTimer = New-UIResponsivenessTimer -UIElements $global:MainWindowElements
     if ($script:uiResponsivenessTimer) {
         $script:uiResponsivenessTimer.Start()
         Write-Host "UI responsiveness timer started"
     }
-    
-    # Clear output text box
-    $global:MainWindowElements["OutputTextBox"].Clear()
     
     # Configure start button click event
     $global:MainWindowElements["StartButton"].Add_Click({
@@ -85,20 +77,23 @@ function Initialize-MainWindow {
             $global:MainWindowElements["StatusText"].Text = "Processing..."
             
             Write-Host "Creating background job..."
-            $newJob = Start-LongRunningProcess -ProcessLogic {
-                try {
-                    # Simulate long-running process
-                    1..100 | ForEach-Object {
-                        Start-Sleep -Milliseconds 50
-                        Write-Output $_
-                        Write-Host "Progress: $_"
-                    }
-                }
-                catch {
-                    Write-Error "Error in background process: $($_.Exception.Message)"
-                    throw
+
+            # This function can be any function you want to pass to the background
+            $demoFunction = {
+                param($startValue)
+                1..100 | ForEach-Object {
+                    Start-Sleep -Milliseconds 100
+                    $progress = $startValue + $_
+                    Write-Progress -PercentComplete (($progress / 100) * 100) -Status "Processing..." -Activity "Job in Progress" -CurrentOperation "Progress: $progress"
+                    Write-Output $progress  # This sends the progress value back to the main script
                 }
             }
+
+            # Define the argument value for the job
+            $startValue = 0
+
+            # Start the background job using the function and initial parameter
+            $newJob = Start-LongRunningProcess -ProcessLogic $demoFunction -ArgumentList $startValue
             
             if ($newJob -and $newJob.State) {
                 Write-Host "Job created: $($newJob.Id) - State: $($newJob.State)"

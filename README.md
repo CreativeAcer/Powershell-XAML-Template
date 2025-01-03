@@ -52,34 +52,56 @@ MyPowerShellApp/
 
 ## How It Works
 
-### Background Job Processing
+### 1. Background Job Management
+
+This template leverages PowerShell's background job functionality to run intensive tasks on separate threads, ensuring that the UI remains responsive during long-running operations.
+
 ```powershell
 # BackgroundJobs.psm1 handles threaded operations
 function Start-LongRunningProcess {
     param([ScriptBlock]$ProcessLogic)
-    # Creates separate thread for intensive tasks
+    
+    # Creates a new background job to handle intensive tasks on a separate thread
     $job = Start-Job -ScriptBlock $ProcessLogic
     return $job
 }
 ```
+- Start-Job: Executes the provided script block on a separate thread, allowing the main thread (UI) to stay responsive.
+- Job management: The background job handles the execution of the task, and results can be processed asynchronously.
 
-### Progress Monitoring
+### 2. Progress Monitoring
+
+To ensure that progress is tracked and reflected in the UI without blocking it, a timer is used to periodically fetch and update progress from the background job.
+
 ```powershell
 # Timer-based progress updates
 function New-ProgressTimer {
-    # Updates UI elements safely from background thread
-    # Maintains UI responsiveness during processing
+    param(
+        [hashtable]$UIElements,
+        [System.Management.Automation.Job]$Job
+    )
+    
+    # Sets up periodic checks for progress updates from the job
+    # Ensures the UI is updated with progress without blocking
 }
 ```
+- Timer: Periodically checks the background job for progress updates (e.g., percent completion, status).
+- UI Update: Safely updates the UI (progress bar, status text) on each timer tick, ensuring the UI remains responsive.
 
-### UI Thread Indicator
+### 3. UI Responsiveness Indicator
+To visually indicate that the UI is still responsive, a spinning animation is displayed during the background process. The spinner freezes if the UI thread becomes blocked.
+
 ```powershell
 # Visual confirmation of responsive UI
 function New-UIResponsivenessTimer {
-    # Spinning animation and timestamp
-    # Freezes if UI thread blocks
+    param([hashtable]$UIElements)
+    
+    # Shows a spinning animation and updates the timestamp
+    # The spinner stops if the UI thread becomes unresponsive
 }
 ```
+- Spinner: A rotating spinner gives users visual feedback that the UI is still actively processing.
+- Timestamp: A real-time timestamp is updated, providing continuous feedback on time elapsed during the background process.
 
 ## Key Components
 
@@ -103,18 +125,38 @@ function New-UIResponsivenessTimer {
 ### Starting a Background Task
 ```powershell
 $newJob = Start-LongRunningProcess -ProcessLogic {
-    # Your intensive operation here
+    # Your intensive operation goes here
     1..100 | ForEach-Object {
         Start-Sleep -Milliseconds 50
-        Write-Output $_  # Reports progress
+        Write-Output $_  # Reports progress to the job
     }
 }
+```
+- You can also pass a function with parameters to the backgroundjob
+
+```powershell
+# This function can be any function you want to pass to the background
+$demoFunction = {
+    param($startValue)
+    1..100 | ForEach-Object {
+        Start-Sleep -Milliseconds 100
+        $progress = $startValue + $_
+        Write-Progress -PercentComplete (($progress / 100) * 100) -Status "Processing..." -Activity "Job in Progress" -CurrentOperation "Progress: $progress"
+        Write-Output $progress  # This sends the progress value back to the main script
+    }
+}
+
+# Define the argument value for the job
+$startValue = 0
+
+# Start the background job using the function and initial parameter
+$newJob = Start-LongRunningProcess -ProcessLogic $demoFunction -ArgumentList $startValue
 ```
 
 ### Monitoring Progress
 ```powershell
 $timer = New-ProgressTimer -UIElements $UIElements -Job $newJob
-$timer.Start()  # Begins progress tracking
+$timer.Start()  # Begins progress tracking and updates UI
 ```
 
 ## Best Practices
@@ -143,6 +185,9 @@ $ProcessLogic = {
     # Your custom processing here
     # Use Write-Output for progress
 }
+
+# Or pass your own function!
+$demoFunction = ...
 ```
 
 ### 2. Update Progress Visualization
@@ -159,7 +204,6 @@ $ProcessLogic = {
 
 - Windows PowerShell 5.1+
 - .NET Framework 4.5+
-- Administrator privileges
 
 ## License
 
