@@ -15,18 +15,18 @@
         <!-- Welcome text and spinner area -->
         <StackPanel Grid.Row="0" Background="{Binding Source=$AppTheme.PrimaryColor}">
             <TextBlock Text="Welcome" Foreground="{Binding Source=$AppTheme.TextColor}"
-                     FontSize="24" Margin="10"/>
+                    FontSize="24" Margin="10"/>
             
             <!-- Spinner and Time Display placed next to each other -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
-                <!-- Spinner Canvas -->
-                 <Canvas x:Name="SpinnerCanvas" Width="50" Height="50" Margin="0,0,10,0">
+                <!-- Spinner Canvas with adjusted margin for better space management -->
+                <Canvas x:Name="SpinnerCanvas" Width="50" Height="50" Margin="0,0,10,0" Visibility="Visible" HorizontalAlignment="Center">
                     <Path x:Name="SpinnerPath" 
-                        Stroke="{Binding Source=$AppTheme.TextColor}" 
+                        Stroke="Black" 
                         StrokeThickness="2"
                         Data="M 10,2 A 8,8 0 1 1 9.9,2">
                         <Path.RenderTransform>
-                            <RotateTransform x:Name="SpinTransform" CenterX="10" CenterY="10"/>
+                            <RotateTransform x:Name="SpinTransform" CenterX="25" CenterY="25"/>
                         </Path.RenderTransform>
                     </Path>
                 </Canvas>
@@ -38,6 +38,7 @@
                         VerticalAlignment="Center"/>
             </StackPanel>
         </StackPanel>
+
 
         <!-- Main Content Area -->
         <Grid Grid.Row="1" Margin="10">
