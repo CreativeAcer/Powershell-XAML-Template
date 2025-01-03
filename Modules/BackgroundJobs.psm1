@@ -1,13 +1,16 @@
 function Start-LongRunningProcess {
     param(
         [Parameter(Mandatory=$true)]
-        [ScriptBlock]$ProcessLogic
+        [ScriptBlock]$ProcessLogic,
+        
+        [Parameter(Mandatory=$false)]
+        [Object[]]$ArgumentList
     )
     
     Write-Host "Starting background job..."
     
     try {
-        $job = Start-Job -ScriptBlock $ProcessLogic -ErrorAction Stop
+        $job = Start-Job -ScriptBlock $ProcessLogic -ArgumentList $ArgumentList -ErrorAction Stop
         Write-Host "Job created with ID: $($job.Id)"
         Write-Host "Job state: $($job.State)"
         return $job
@@ -17,6 +20,7 @@ function Start-LongRunningProcess {
         return $null
     }
 }
+
 
 function New-ProgressTimer {
     param(
@@ -133,7 +137,7 @@ function New-ProgressTimer {
         catch {
             Write-Host "Error in timer tick: $($_.Exception.Message)"
             $script:timerState.IsRunning = $false
-            if ($script:timerState.Timer) { 
+            if ($script:timerState.Timer) {
                 $script:timerState.Timer.Stop()
                 $script:timerState.Timer = $null
             }
@@ -159,6 +163,7 @@ function New-ProgressTimer {
     
     return $script:timerState.Timer
 }
+
 
 function New-UIResponsivenessTimer {
     param(
